@@ -3,3 +3,6 @@
 *.pdb
 *.wasm
 /plugins/**/target
+
+# Desktop-only: do not track installer output in desktop repo
+installer/Output/
