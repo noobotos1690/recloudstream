@@ -1,6 +1,18 @@
 {
-  "name": "CloudStream Desktop — built-in providers",
-  "description": "Repository index for CloudStream Desktop. This index is intentionally empty: every provider this build ships with is compiled into the binary as a native Rust built-in, so there is nothing to download. The index exists so the distribution path (manifest format, hash pinning, install flow) is exercised by a real, valid file rather than a documented guess. WebAssembly extensions will be listed here once real .wasm builds exist; the Android .cs3 plugins from Niloy's repository cannot be installed by the desktop build because they are Kotlin APKs.",
+  "name": "CloudStream Desktop Extensions",
+  "description": "Installable WebAssembly extensions for CloudStream Desktop. The Android .cs3 plugins from Niloy's repository cannot be installed here: they are Kotlin APKs and this runtime executes wasm32 modules. Every entry below is a native module built for this runtime; binary URLs are absolute so this index works from any build.",
   "manifest_version": 1,
-  "extensions": []
+  "extensions": [
+    {
+      "provider_id": "ctgmovies",
+      "name": "CTGMovies",
+      "version": "1.0.0",
+      "description": "Films, series and anime from ctgmovies.com, with direct file links for playback.",
+      "language": "en",
+      "url": "https://github.com/noobotos1690/recloudstream/releases/latest/download/ctgmovies.wasm",
+      "sha256": "e5d33e5bbaec57f2a2cabeddda46905c421c1a98cf7a4516984af110395013bc",
+      "icon_url": "https://ctgmovies.com/favicon.ico",
+      "size_bytes": 172438
+    }
+  ]
 }

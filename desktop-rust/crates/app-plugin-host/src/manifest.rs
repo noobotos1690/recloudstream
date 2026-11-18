@@ -70,7 +70,7 @@ pub fn validate_entry(entry: &RepositoryExtension) -> Result<(), ProviderError> 
             entry.provider_id
         )));
     }
-    if !(entry.url.starts_with("https://") || entry.url.starts_with("http://")) {
+    if !is_acceptable_url(&entry.url) {
         return Err(ProviderError::Parse(format!(
             "extension `{}` has a non-http url",
             entry.provider_id
@@ -145,6 +145,36 @@ fn is_allowed_id(id: &str) -> bool {
         && id
             .chars()
             .all(|c| c.is_ascii_alphanumeric() || matches!(c, '-' | '_' | '.'))
+}
+
+/// Whether an entry URL may be handed to the downloader.
+///
+/// Both absolute and relative URLs are accepted, because `HttpRepository` takes
+/// the index's own address as the base: a relative entry is joined onto that
+/// https origin before any request is made, so it cannot escape the scheme
+/// allow-list. Rejecting relative URLs here made `HttpRepository::resolve` dead
+/// code and contradicted the ABI document, which tells repository authors that
+/// `"url": "demo.wasm"` is valid next to the index.
+///
+/// A URL carrying *some other* scheme is still refused, as is a
+/// protocol-relative one, so `file:`, `javascript:` and `//host/path` never
+/// reach the network layer.
+fn is_acceptable_url(url: &str) -> bool {
+    let url = url.trim();
+    if url.starts_with("https://") || url.starts_with("http://") {
+        return true;
+    }
+    // Protocol-relative URLs would take the host from the *path*, so refuse them.
+    if url.starts_with("//") {
+        return false;
+    }
+    // Anything whose first path segment carries a colon is a scheme, not a path:
+    // `file:`, `javascript:`, `ftp:`, and also a Windows drive letter. Testing
+    // for "://" alone would let `javascript:alert(1)` through as "relative".
+    if url.split('/').next().is_some_and(|head| head.contains(':')) {
+        return false;
+    }
+    !url.is_empty()
 }
 
 pub fn hex_decode(input: &str) -> Option<Vec<u8>> {
@@ -267,5 +297,51 @@ mod tests {
         let bytes = [0u8, 15, 16, 255];
         assert_eq!(hex_decode(&hex_encode(&bytes)).unwrap(), bytes.to_vec());
         assert!(hex_decode("zz").is_none());
+    }
+
+    /// A relative entry is resolved against the index's own https origin by
+    /// `HttpRepository`, so it must survive validation instead of being rejected
+    /// as a "non-http url".
+    #[test]
+    fn relative_entry_urls_are_accepted() {
+        for url in [
+            "ctgmovies.wasm",
+            "./ctgmovies.wasm",
+            "bin/a.wasm",
+            "/root/a.wasm",
+        ] {
+            assert!(is_acceptable_url(url), "{url} should be accepted");
+        }
+    }
+
+    #[test]
+    fn non_http_schemes_are_still_rejected() {
+        for url in [
+            "file:///etc/passwd",
+            "javascript:alert(1)",
+            "ftp://host/a.wasm",
+            "//evil.test/a.wasm",
+            "",
+            "   ",
+        ] {
+            assert!(!is_acceptable_url(url), "{url} should be rejected");
+        }
+    }
+
+    #[test]
+    fn repository_with_a_relative_entry_parses() {
+        let json = r#"{
+            "name": "Relative repo",
+            "manifest_version": 1,
+            "extensions": [{
+                "provider_id": "demo",
+                "name": "Demo",
+                "version": "1.0.0",
+                "url": "demo.wasm",
+                "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+            }]
+        }"#;
+        let repository = parse_repository(json).expect("relative url must validate");
+        assert_eq!(repository.extensions[0].url, "demo.wasm");
     }
 }

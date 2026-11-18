@@ -114,7 +114,11 @@ installer/Output/
 # Build output. `target/` reaches ~8 GB after a release build; committing it
 # would wreck the repository, so it is ignored here rather than at the root.
 /target/
-# Staging directory assembled by scripts/build.ps1 before ISCC runs.
+# WebAssembly extensions are separate crates outside the workspace, so each has
+# its own target directory that the anchored rule above does not cover.
+/plugins/*/target/
+# Staging directory assembled by scripts/build.ps1 before ISCC runs, and the
+# renamed extension binaries scripts/release.ps1 uploads.
 /dist/
 # Profiler and coverage output.
 *.profraw

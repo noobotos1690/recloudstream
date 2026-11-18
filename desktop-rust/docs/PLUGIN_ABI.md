@@ -225,6 +225,8 @@ valid SHA-256; an entry without one is rejected before any download starts.
    ```
 4. Publish the `.wasm` plus its SHA-256 in a repository index.
 
-See `plugins/example-provider/` for a complete, minimal module.
+See `plugins/ctgmovies/` for a complete, working module. It reuses the built-in
+`CtgMovies` provider and replaces only its HTTP client, so it also shows how to
+supply `host_http_request` without duplicating scraping logic.
 
 [Extism]: https://extism.org/docs/concepts/plug-in

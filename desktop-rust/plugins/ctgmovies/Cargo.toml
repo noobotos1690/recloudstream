@@ -1,0 +1,27 @@
+[package]
+name = "ctgmovies-plugin"
+version = "1.0.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+description = "CTGMovies as a CloudStream Desktop WebAssembly extension (ABI v1)"
+
+[lib]
+crate-type = ["cdylib"]
+
+# The provider logic is reused, not copied: `CtgMovies` is the same Rust port the
+# desktop build compiles in, and it only needs its `HttpClient` swapped for one
+# that talks to the Extism host function. That keeps a single implementation of
+# the scraping rules, so the built-in and the installable extension cannot drift.
+[dependencies]
+app-core = { path = "../../crates/app-core" }
+app-providers = { path = "../../crates/app-providers" }
+extism-pdk = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"

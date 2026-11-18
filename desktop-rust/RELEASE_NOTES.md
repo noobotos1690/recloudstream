@@ -3,94 +3,93 @@
 ## What is ready now (released)
 
 - A standalone Windows desktop build of CloudStream with a **built-in CTGMovies** provider.
+- **A working, installable WebAssembly extension**: `ctgmovies.wasm` is attached to this
+  release, listed in the repository index, and installs through the normal Extensions
+  screen. It is a real wasm32 module — not a repackaged Android plugin.
 - Extensions screen with per-row **Refresh** and **Remove** buttons for each repository.
 - Repository retry logic: a repository that never loaded successfully is retried on every start; repeated identical errors are suppressed so the user is not greeted by the same toast over and over.
 - Release build uses `windows_subsystem = "windows"` so the app starts without a console window.
-- All tests pass (`cargo test --all` — **81 passed, 0 failed**), clippy is clean (`0 warnings`), and `cargo fmt --all --check` is clean.
-- A Windows installer is attached to this release: `CloudStreamDesktop-0.1.0-setup.exe` (~5.9 MB, LZMA2).
-- The repository index `repo.json` is attached to this release and is served from a real public URL:
-  `https://github.com/noobotos1690/recloudstream/releases/download/v1.3.0/repo.json`
+- All tests pass (`cargo test --all` — **84 passed, 0 failed**), clippy is clean (`0 warnings`), and `cargo fmt --all --check` is clean.
+- A Windows installer is attached: `CloudStreamDesktop-0.1.0-setup.exe` (~5.9 MB, LZMA2).
 
-## How to test
+## Add the repository
 
-1. Build: `cargo build --release --locked --target x86_64-pc-windows-msvc` from `desktop-rust/`
-2. Smoke test: `CS_CHECK=1 ./target/x86_64-pc-windows-msvc/release/cloudstream-desktop.exe --probe builtin-ctgmovies`
-3. Or run the whole chain (build, stage, verify imports, compile installer): `pwsh -File scripts/build.ps1`
-4. The installer is written to `desktop-rust/installer/Output/CloudStreamDesktop-<version>-setup.exe`
-
-## What is NOT ready — the repository is valid but empty
-
-The Niloy repository integration is **documented, not runnable**, and the index
-shipped with this release is **valid but contains no installable extensions**.
-
-Specifically:
-
-- We fetched and analyzed the original `repo.json` + `plugins.json` from `Niloy-Sarker/niloy-cloudstream`.
-- We produced a **field mapping table** showing how Android `.cs3` (APK) extension fields map to desktop `.wasm` extension fields.
-- The Android index cannot be used as-is: `parse_repository` detects the `pluginLists`/`manifestVersion` shape and refuses it with *"this is a CloudStream Android repository: its plugins are Kotlin APKs, while this desktop build runs WebAssembly extensions"*.
-- There are **no desktop `.wasm` binaries in this repository at all**. The only provider that works is **CTGMovies**, and it is compiled into the binary as a **built-in Rust provider**, not installed from the index.
-- The other six original plugins (CineBDIX, Dflix, DhakaFlix-tmdb, FMFTP, FTPBD, Roarzone) are still **Android-only `.cs3`** plugins and have no desktop `.wasm` equivalent yet.
-
-So `releases/v1.3.0/repo.json` deliberately declares `"extensions": []`. It is a
-real, schema-valid index that the app can fetch and parse — it proves the
-distribution path works end to end — but it installs nothing, because there is
-nothing truthful to install yet.
-
-> **Correction to an earlier draft of these notes.** The previous `repo.json`
-> listed a CTGMovies entry whose `sha256` began with `sha256-`, copied from
-> Android's `fileHash`. The desktop validator requires a bare 64-character hex
-> digest, so that file was rejected outright rather than installing. It has been
-> replaced, and two regression tests now pin the behaviour
-> (`shipped_release_index_parses_and_validates`,
-> `sha256_prefix_from_android_format_is_rejected`).
-
-## How the public endpoint works
-
-The index is served straight from the release assets — no Pages, no object
-storage, no server to keep alive:
-
-```
-https://github.com/noobotos1690/recloudstream/releases/download/v1.3.0/repo.json
-```
-
-The app does not use that version-pinned address. `BUILTIN_REPOSITORIES` seeds
-the stable one, which GitHub redirects to the newest published release:
+Paste this into the Extensions screen and press **Add repository**:
 
 ```
 https://github.com/noobotos1690/recloudstream/releases/latest/download/repo.json
 ```
 
-That entry replaced the previous built-in, which pointed at Niloy's Android
-`repo.json` and therefore failed on every start of every fresh profile with
-*"this is a CloudStream Android repository…"* — a permanent, retried error
-rather than a usable source.
+The field needs a **full http/https URL**; typing a name such as `cs-niloy` is rejected
+with *"Repository URLs must start with http:// or https://"*. A profile that has never
+stored a repository gets this entry pre-added automatically.
 
-When real `.wasm` binaries exist, attach them to the same release (or a later
-one) and point each entry's `url` at its own `releases/download/...` address,
-with the binary's bare SHA-256 in `sha256`. Nothing about the endpoint has to
-change.
+The index lists one extension:
 
-For local testing, `docker/docker-compose.yml` serves the same directory over
-`http://127.0.0.1:8080/repo/repo.json`.
+| provider_id | name | binary |
+|---|---|---|
+| `ctgmovies` | CTGMovies | `ctgmovies.wasm` (172,438 B) |
 
-## Repo notes
+## What is NOT ready — the other six Niloy plugins
 
-- `installer/Output/`, `target/` and `dist/` are ignored. The installer is built by
-  CI (or `scripts/build.ps1`) and attached to the release, never committed.
-- `plugins.json` has been removed: the desktop schema has no plugin-list
-  indirection. `Repository.extensions` holds the entries inline, so Android's
-  `repo.json` → `pluginLists` → `plugins.json` chain collapses to one file.
-- Release automation lives in `.github/workflows/desktop-rust.yml` at the repo
-  root (the nested `desktop-rust/.github/workflows/` copy never ran — GitHub only
-  reads workflows from the root). The manual path is `scripts/release.ps1`.
-- This repo is the desktop project under `desktop-rust/`. The Android project
-  lives in the parent repo and is not touched here.
+The Niloy repository's own index **cannot** be used here and never will be forwarded
+to: it is an Android CloudStream repository, its entries are Kotlin `.cs3` packages, and
+this runtime executes wasm32 modules. `parse_repository` says so explicitly instead of
+failing with a schema error.
 
-## Known limits
+Of the seven plugins in `Niloy-Sarker/niloy-cloudstream`:
 
-- No installable desktop extension exists yet; the only provider is built in.
-- The desktop build cannot install Android `.cs3` plugins and should not pretend to.
-- BDIX-internal sources only resolve inside specific Bangladeshi ISPs; failures
-  elsewhere are geographic restriction, not a bug.
+- **CTGMovies** is the only one with a desktop implementation (two of them: the built-in
+  and the installable extension above).
+- **CineBDIX, Dflix, DhakaFlix-tmdb, FMFTP, FTPBD, Roarzone** are still Android-only.
+  Each needs its own reimplementation in Rust + `host_http_request`; none can be
+  repackaged from the `.cs3`. There is no shortcut and no automated converter.
+- The BDIX-internal sources only resolve inside specific Bangladeshi ISPs, so even a port
+  of those would fail to load outside Bangladesh — that is geographic restriction, not a bug.
+
+## How to test
+
+1. Build: `cargo build --release --locked --target x86_64-pc-windows-msvc` from `desktop-rust/`
+2. Smoke test: `CS_CHECK=1 ./target/x86_64-pc-windows-msvc/release/cloudstream-desktop.exe --probe builtin-ctgmovies`
+3. Whole chain (build, stage, verify imports, compile installer): `pwsh -File scripts/build.ps1`
+4. Build the extension: `pwsh` from `plugins/` — see `plugins/README.md`
+5. Publish a release with installer + index + binary: `pwsh -File scripts/release.ps1 -Tag v1.3.0`
+
+Verified end to end with the application's own code: fetch the index from the public URL,
+resolve the entry, download the binary, match the pinned SHA-256, load it in the sandbox,
+and run `search` (9 items). The probe independently returns home 3 rows / 89 items,
+search 9 items, details resolved and 2 stream sources, exit 0.
+
+## Corrections to earlier revisions of this release
+
+These were real defects, fixed in this build:
+
+- The shipped `repo.json` used Android's `"sha256-<hex>"` form. The validator requires a
+  bare 64-character digest, so the index was rejected outright rather than installing.
+- `validate_entry` rejected relative entry URLs even though `HttpRepository::resolve`
+  implements them and `docs/PLUGIN_ABI.md` documents them. Relative URLs now validate;
+  the shipped index still uses absolute URLs so older builds keep working.
+- `plugins.json` was removed: the desktop schema has no `pluginLists` indirection.
+- `docker/docker-compose.yml` mounted `./releases/v1.3.0`, which resolves to
+  `docker/releases/v1.3.0` and never existed, so the volume came up empty.
+- Three release scripts could not run: a `.ps1` containing bash that also passed
+  `--generate-notes` with `--notes-file`, a `.bat` passing `--%!ASSET!` as a filename,
+  and a nested workflow GitHub never reads that called `ISCC.exe` on ubuntu. Replaced by
+  `scripts/release.ps1` and the root `desktop-rust.yml` workflow.
+- `BUILTIN_REPOSITORIES` seeded Niloy's Android index, which can never load, so every
+  fresh profile carried a permanent, retried error. It now seeds the desktop index.
+- The installer tests shared one temp directory keyed only by process id, so the
+  parallel tests deleted each other's files and the suite failed intermittently. Each
+  test now gets its own root.
+
+## Notes
+
+- `installer/Output/`, `target/` and `dist/` are ignored. Releases are built by CI or
+  `scripts/build.ps1` and attached as assets, never committed.
+- The extension reuses the built-in `CtgMovies` provider rather than copying it, so the
+  two cannot drift. It reports `ctgmovies` rather than `builtin-ctgmovies` because the
+  registry replaces providers on id collision.
+- This repo is the desktop project under `desktop-rust/`. The Android project lives in
+  the parent repo and is not touched here.
 
 — CloudStream Desktop v1.3.0

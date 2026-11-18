@@ -10,6 +10,10 @@ members = [
     "crates/app-providers",
     "crates/app-ui",
 ]
+# WebAssembly extensions are built for `wasm32-unknown-unknown` and must not be
+# pulled into a host build: they register Extism host functions that only exist
+# inside the sandbox. Build them with --manifest-path (see plugins/README.md).
+exclude = ["plugins/ctgmovies"]
 default-members = ["crates/app"]
 
 [workspace.package]

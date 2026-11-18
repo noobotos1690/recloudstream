@@ -63,7 +63,6 @@ try {
     # -- assets -------------------------------------------------------------
     # The repository index ships as a release asset so it is served from a real
     # public URL without enabling Pages: releases/download/<tag>/repo.json.
-    # `.wasm` binaries belong in the same release once they exist.
     $files = @((Resolve-Path -LiteralPath $Asset).Path)
     $repoIndex = Join-Path 'releases' $Tag
     $repoIndex = Join-Path $repoIndex 'repo.json'
@@ -72,6 +71,22 @@ try {
     }
     else {
         Write-Warning "No repository index at $repoIndex; the release will not serve one."
+    }
+
+    # WebAssembly extensions. The index lists each binary by a relative name, and
+    # `gh release upload` keeps the file's basename, so the artifact is staged
+    # under exactly the name the index uses. Otherwise the download 404s while
+    # the index still looks correct.
+    $wasm = 'plugins\ctgmovies\target\wasm32-unknown-unknown\release\ctgmovies_plugin.wasm'
+    if (Test-Path -LiteralPath $wasm) {
+        $stage = 'dist\plugins'
+        New-Item -ItemType Directory -Force -Path $stage | Out-Null
+        $staged = Join-Path $stage 'ctgmovies.wasm'
+        Copy-Item -LiteralPath $wasm -Destination $staged -Force
+        $files += (Resolve-Path -LiteralPath $staged).Path
+    }
+    else {
+        Write-Warning "No built extension at $wasm; the index will list an asset that is not uploaded."
     }
 
     Write-Host "Tag:   $Tag"

@@ -109,8 +109,17 @@ mod tests {
     }
 
     fn store() -> Store {
+        // These tests run in parallel threads inside one process, so a root keyed
+        // only by the process id made them share a directory: the `remove_dir_all`
+        // below deleted files another test was still using and the suite failed
+        // intermittently. A per-call counter gives each test its own root.
+        static NEXT: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
         let mut root = std::env::temp_dir();
-        root.push(format!("cs-installer-test-{}", std::process::id()));
+        root.push(format!(
+            "cs-installer-test-{}-{}",
+            std::process::id(),
+            NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+        ));
         let _ = std::fs::remove_dir_all(&root);
         Store::open(root).expect("store")
     }
