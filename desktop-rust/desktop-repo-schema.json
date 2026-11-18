@@ -1,0 +1,18 @@
+{
+  "name": "Niloy's BDIX Repo (Desktop)",
+  "description": "BDIX-internal Bengali content sources for CloudStream Desktop",
+  "manifest_version": 1,
+  "extensions": [
+    {
+      "provider_id": "ctgmovies",
+      "name": "CTGMovies",
+      "version": "1.0.0",
+      "description": "Films, series and anime from ctgmovies.com",
+      "language": "en",
+      "url": "https://example.com/ctgmovies.wasm",
+      "sha256": "sha256-650b4cdb442f9ad31bf9fdce8b1c29bd6842ffdf0774d0ee5bf8a63fbb560cc7",
+      "icon_url": "https://ctgmovies.com/favicon.ico",
+      "size_bytes": 37778
+    }
+  ]
+}
