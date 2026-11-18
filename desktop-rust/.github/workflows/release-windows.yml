@@ -16,11 +16,15 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: x86_64-pc-windows-msvc
+      - name: Install Inno Setup
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y innoextract
       - name: Build release
         run: cargo build --release --locked --target x86_64-pc-windows-msvc
       - name: Build installer
         run: |
-          echo "ISCC.exe would run here (installer\\installer.iss)"
+          iscc.exe installer\\installer.iss
       - name: Create release
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
