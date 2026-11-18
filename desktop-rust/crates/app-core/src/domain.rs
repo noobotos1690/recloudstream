@@ -377,9 +377,21 @@ fn default_manifest_version() -> u32 {
 /// sources a build is meant to serve are one click away instead of a URL to
 /// copy. Nothing is hidden: a built-in repository that cannot be used reports
 /// its reason in the Extensions screen and stays visible.
+///
+/// The URL is the desktop index attached to the newest published GitHub
+/// release. `releases/latest/download/` is a stable address that follows to that
+/// release, so the entry survives new versions without a code change, and a
+/// `.wasm` binary added to a release can be listed from the same index.
+///
+/// The Niloy BDIX repository this build was ported from is deliberately **not**
+/// listed. Its index is an Android CloudStream repository whose entries are
+/// Kotlin `.cs3` APKs, so it can never load on the desktop runtime; seeding it
+/// meant every fresh profile showed the same permanent error and retried it on
+/// every start. The Android index and its field mapping live in
+/// `desktop-repo-analysis.md` instead.
 pub const BUILTIN_REPOSITORIES: &[(&str, &str)] = &[(
-    "Niloy's BDIX Repo",
-    "https://raw.githubusercontent.com/Niloy-Sarker/niloy-cloudstream/master/repo.json",
+    "CloudStream Desktop Extensions",
+    "https://github.com/noobotos1690/recloudstream/releases/latest/download/repo.json",
 )];
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -511,5 +523,24 @@ mod tests {
             episode_id: None,
         };
         assert_eq!(p.fraction(), 1.0);
+    }
+
+    /// Every seeded repository is fetched on a fresh profile, and a failed one is
+    /// retried on every start, so a built-in that can never load is a permanent
+    /// error in the UI rather than a one-off.
+    #[test]
+    fn builtin_repositories_are_https_json_indexes() {
+        assert!(!BUILTIN_REPOSITORIES.is_empty());
+        for (name, url) in BUILTIN_REPOSITORIES {
+            assert!(!name.trim().is_empty(), "built-in repository needs a name");
+            assert!(url.starts_with("https://"), "{url} must be https");
+            assert!(url.ends_with(".json"), "{url} must be a JSON index");
+            // The Android index is detected and refused by parse_repository;
+            // shipping it as a built-in guarantees a recurring visible error.
+            assert!(
+                !url.contains("niloy-cloudstream"),
+                "{url} is the Android CloudStream index"
+            );
+        }
     }
 }

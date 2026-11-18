@@ -6,7 +6,7 @@
 - Extensions screen with per-row **Refresh** and **Remove** buttons for each repository.
 - Repository retry logic: a repository that never loaded successfully is retried on every start; repeated identical errors are suppressed so the user is not greeted by the same toast over and over.
 - Release build uses `windows_subsystem = "windows"` so the app starts without a console window.
-- All tests pass (`cargo test --all` — **80 passed, 0 failed**), clippy is clean (`0 warnings`), and `cargo fmt --all --check` is clean.
+- All tests pass (`cargo test --all` — **81 passed, 0 failed**), clippy is clean (`0 warnings`), and `cargo fmt --all --check` is clean.
 - A Windows installer is attached to this release: `CloudStreamDesktop-0.1.0-setup.exe` (~5.9 MB, LZMA2).
 - The repository index `repo.json` is attached to this release and is served from a real public URL:
   `https://github.com/noobotos1690/recloudstream/releases/download/v1.3.0/repo.json`
@@ -52,6 +52,18 @@ storage, no server to keep alive:
 ```
 https://github.com/noobotos1690/recloudstream/releases/download/v1.3.0/repo.json
 ```
+
+The app does not use that version-pinned address. `BUILTIN_REPOSITORIES` seeds
+the stable one, which GitHub redirects to the newest published release:
+
+```
+https://github.com/noobotos1690/recloudstream/releases/latest/download/repo.json
+```
+
+That entry replaced the previous built-in, which pointed at Niloy's Android
+`repo.json` and therefore failed on every start of every fresh profile with
+*"this is a CloudStream Android repository…"* — a permanent, retried error
+rather than a usable source.
 
 When real `.wasm` binaries exist, attach them to the same release (or a later
 one) and point each entry's `url` at its own `releases/download/...` address,

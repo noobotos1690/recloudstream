@@ -126,16 +126,24 @@ removed from `releases/v1.3.0/` for that reason.
 
 ## 5. What Was Already Working in Desktop Build
 
-- **`BUILTIN_REPOSITORIES`** in `crates/app-core/src/domain.rs:380` already includes:
+- **`BUILTIN_REPOSITORIES`** in `crates/app-core/src/domain.rs` now seeds the
+  **desktop** index instead of the Android one:
   ```rust
-  pub const BUILTIN_REPOSITORIES: &[(&str, &str)] = &[
-      ("Niloy's BDIX Repo",
-       "https://raw.githubusercontent.com/Niloy-Sarker/niloy-cloudstream/master/repo.json"),
-  ];
+  pub const BUILTIN_REPOSITORIES: &[(&str, &str)] = &[(
+      "CloudStream Desktop Extensions",
+      "https://github.com/noobotos1690/recloudstream/releases/latest/download/repo.json",
+  )];
   ```
+  It previously pointed at
+  `raw.githubusercontent.com/Niloy-Sarker/niloy-cloudstream/master/repo.json`,
+  which `parse_repository` rejects every single time (Android `pluginLists`
+  shape). Because a built-in repository is seeded on a fresh profile and any
+  repository with a `last_error` is retried on every start, that entry produced
+  the same permanent, recurring error for every new user. The Android index is
+  documented here instead of being shipped as a dead built-in.
 - **Extensions screen** has Refresh and Remove buttons per repository row (via `Intent::RefreshRepository` and `Intent::RemoveRepository`)
 - **CTGMovies provider** already ported to Rust in `app-providers` crate (the only Android → Wasm port needed)
-- **All 80 tests pass**, 0 failed; clippy 0 warnings; `cargo fmt --all --check` clean
+- **All 81 tests pass**, 0 failed; clippy 0 warnings; `cargo fmt --all --check` clean
 - **`--probe builtin-ctgmovies`**: home 3 rows / 89 items, search 9 items, details resolve, 2 sources found, exit 0
 - **Release build**: PE subsystem 2 → no console window
 
@@ -161,5 +169,5 @@ Error handling:
 | 1 | Fetch and analyze `repo.json` | ✅ Done — format documented |
 | 2 | Create Android→Desktop Wasm mapping table | ✅ Done — all fields mapped |
 | 3 | Design desktop repo schema JSON | ✅ Done — `desktop-repo-schema.json` created |
-| 4 | Verify all plan verifications pass | ✅ Done — 80 tests, 0 clippy warnings, clean fmt, release build OK, --probe works |
+| 4 | Verify all plan verifications pass | ✅ Done — 81 tests, 0 clippy warnings, clean fmt, release build OK, --probe works |
 | 5 | Niloy repo analysis complete | ✅ Done — BDIX-internal DNS restriction documented |
