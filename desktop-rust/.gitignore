@@ -105,7 +105,7 @@ replay_pid*
 # Ignore all local history of files
 .history
 
-# Includes for desktop-only ignores:
-# installer/Output/ is intentionally not here — the desktop repo may track
-# the installer binary itself for releases (see RELEASE_NOTES.md). If that is
-# ever unwanted, add "installer/Output/" here in a future commit.
+# Desktop-only: do not track the installer output directory in the desktop repo
+# (the installer binary was added manually for the v1.3.0 release only; future
+# releases will be built by CI and attached to a GitHub release).
+installer/Output/
