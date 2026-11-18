@@ -1,0 +1,6 @@
+{
+  "name": "CloudStream Desktop — built-in providers",
+  "description": "Repository index for CloudStream Desktop. This index is intentionally empty: every provider this build ships with is compiled into the binary as a native Rust built-in, so there is nothing to download. The index exists so the distribution path (manifest format, hash pinning, install flow) is exercised by a real, valid file rather than a documented guess. WebAssembly extensions will be listed here once real .wasm builds exist; the Android .cs3 plugins from Niloy's repository cannot be installed by the desktop build because they are Kotlin APKs.",
+  "manifest_version": 1,
+  "extensions": []
+}

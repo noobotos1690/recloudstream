@@ -1,0 +1,12 @@
+[package]
+name = "app-providers"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+# Providers written in Rust and compiled into the binary. They implement the
+# same `Provider` trait as WebAssembly extensions, so the rest of the app cannot
+# tell them apart, but they need no download, no sandbox and no wasm runtime.
+[dependencies]
+app-core = { workspace = true }

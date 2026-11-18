@@ -1,0 +1,59 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/app",
+    "crates/app-core",
+    "crates/app-net",
+    "crates/app-storage",
+    "crates/app-playback",
+    "crates/app-plugin-host",
+    "crates/app-providers",
+    "crates/app-ui",
+]
+default-members = ["crates/app"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.77"
+license = "GPL-3.0-or-later"
+repository = "https://github.com/recloudstream/cloudstream"
+
+[workspace.dependencies]
+app-core = { path = "crates/app-core" }
+app-net = { path = "crates/app-net" }
+app-storage = { path = "crates/app-storage" }
+app-playback = { path = "crates/app-playback" }
+app-plugin-host = { path = "crates/app-plugin-host" }
+app-providers = { path = "crates/app-providers" }
+app-ui = { path = "crates/app-ui" }
+
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+ureq = "3.5"
+extism = "1.41"
+ed25519-dalek = "2.1"
+# Pinned to 0.31 on purpose. 0.32+ replaced SidePanel/TopBottomPanel with a
+# unified `Panel` built inside a root `Ui`, which is a large breaking change for
+# an application shell; 0.31 is the last version whose panel API matches this
+# architecture. Bump deliberately, with the layout tests re-run.
+eframe = { version = "0.31", default-features = false, features = ["glow", "default_fonts"] }
+egui = "0.31"
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp"] }
+libloading = "0.8"
+
+# Size-first release profile: the installer budget is the binding constraint, so
+# optimise for bytes rather than instructions (see docs/DEPENDENCIES.md).
+[profile.release]
+opt-level = "z"
+lto = "fat"
+codegen-units = 1
+strip = true
+panic = "abort"
+incremental = false
+
+# Keep debug builds quick to iterate on; they never ship.
+[profile.dev]
+opt-level = 0
+debug = 1

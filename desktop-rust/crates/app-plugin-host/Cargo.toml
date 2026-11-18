@@ -1,0 +1,15 @@
+[package]
+name = "app-plugin-host"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+app-core = { workspace = true }
+app-storage = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
+extism = { workspace = true }
+ed25519-dalek = { workspace = true }

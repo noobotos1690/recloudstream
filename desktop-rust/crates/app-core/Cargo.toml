@@ -1,0 +1,16 @@
+[package]
+name = "app-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+# The core is deliberately dependency-light: domain types + MVI machine only.
+# No HTTP, no GUI, no platform code. This is what makes it unit-testable and
+# what keeps the binary small.
+[dependencies]
+serde = { workspace = true }
+
+[dev-dependencies]
+# Only the ABI round-trip tests need a JSON codec; the crate itself never parses.
+serde_json = { workspace = true }

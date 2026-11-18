@@ -1,18 +1,18 @@
 {
-  "name": "Niloy's BDIX Repo (Desktop)",
-  "description": "BDIX-internal Bengali content sources for CloudStream Desktop",
+  "name": "Example desktop repository (template)",
+  "description": "TEMPLATE, not a live repository. Every value below is a placeholder chosen to be format-valid so the file parses as a real Repository. Replace the url, sha256 and size_bytes with the actual .wasm binary before serving it.",
   "manifest_version": 1,
   "extensions": [
     {
-      "provider_id": "ctgmovies",
-      "name": "CTGMovies",
+      "provider_id": "example_provider",
+      "name": "Example Provider",
       "version": "1.0.0",
-      "description": "Films, series and anime from ctgmovies.com",
+      "description": "Shows the shape of one extension entry; replace with a real provider.",
       "language": "en",
-      "url": "https://example.com/ctgmovies.wasm",
-      "sha256": "sha256-650b4cdb442f9ad31bf9fdce8b1c29bd6842ffdf0774d0ee5bf8a63fbb560cc7",
-      "icon_url": "https://ctgmovies.com/favicon.ico",
-      "size_bytes": 37778
+      "url": "https://example.com/example_provider.wasm",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "icon_url": "https://example.com/icon.png",
+      "size_bytes": 0
     }
   ]
 }

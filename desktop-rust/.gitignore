@@ -109,3 +109,14 @@ replay_pid*
 # (the installer binary was added manually for the v1.3.0 release only; future
 # releases will be built by CI and attached to a GitHub release).
 installer/Output/
+
+### Rust ###
+# Build output. `target/` reaches ~8 GB after a release build; committing it
+# would wreck the repository, so it is ignored here rather than at the root.
+/target/
+# Staging directory assembled by scripts/build.ps1 before ISCC runs.
+/dist/
+# Profiler and coverage output.
+*.profraw
+*.profdata
+/coverage/

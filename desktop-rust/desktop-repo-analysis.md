@@ -65,7 +65,7 @@
 |---|---|---|
 | `provider_id` (= `internalName`) | `provider_id` | Same — identifies the Wasm plugin |
 | `url` (`.cs3` binary path) | `url` (`.wasm` binary path) | Android has `.apk`; desktop needs `.wasm` |
-| `fileHash` (= `sha256`) | `sha256` | Same hash verification of the binary |
+| `fileHash` (`sha256-<hex>`) | `sha256` (**bare** `<hex>`, no prefix) | Same digest, but the `sha256-` prefix must be stripped: the desktop validator requires exactly 64 hex characters and rejects the prefixed form |
 | `manifest_version` | `manifest_version` | Same format versioning |
 | `signature` (optional) | Optional Ed25519 sig | Same security model |
 | `extensions` list | `extensions` list | Same structure, different binary format |
@@ -84,28 +84,43 @@
 
 ## 4. Desktop Repository Schema (Plan Example)
 
-**Defined in:** `desktop-rust/desktop-repo-schema.json`
+**Defined in:** `desktop-rust/desktop-repo-schema.json` (a template, not a live repo)
 
 ```json
 {
-  "name": "Niloy's BDIX Repo (Desktop)",
-  "description": "BDIX-internal Bengali content sources for CloudStream Desktop",
+  "name": "Example desktop repository (template)",
+  "description": "TEMPLATE, not a live repository. Replace url/sha256/size_bytes with a real .wasm binary before serving.",
   "manifest_version": 1,
   "extensions": [
     {
-      "provider_id": "ctgmovies",
-      "name": "CTGMovies",
+      "provider_id": "example_provider",
+      "name": "Example Provider",
       "version": "1.0.0",
-      "description": "Films, series and anime from ctgmovies.com",
+      "description": "Shows the shape of one extension entry; replace with a real provider.",
       "language": "en",
-      "url": "https://example.com/ctgmovies.wasm",
-      "sha256": "sha256-650b4cdb442f9ad31bf9fdce8b1c29bd6842ffdf0774d0ee5bf8a63fbb560cc7",
-      "icon_url": "https://ctgmovies.com/favicon.ico",
-      "size_bytes": 37778
+      "url": "https://example.com/example_provider.wasm",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "icon_url": "https://example.com/icon.png",
+      "size_bytes": 0
     }
   ]
 }
 ```
+
+**Correction to the first revision of this document.** The example originally
+carried `"sha256": "sha256-650b4c…"`, copied from the Android `fileHash` field.
+`validate_entry` in `crates/app-plugin-host/src/manifest.rs` requires
+`len == 64`, so that entry was rejected with *"has no valid SHA-256 hash"* even
+though the file looked right. The prefix is Android's convention, not the
+desktop schema's. `repo::tests::sha256_prefix_from_android_format_is_rejected`
+pins the rejection and `repo::tests::shipped_release_index_parses_and_validates`
+compiles the shipped `releases/v1.3.0/repo.json` into the test suite so the two
+cannot drift apart again.
+
+There is also **no `plugins.json` indirection** on the desktop side: Android's
+`repo.json` → `pluginLists` → `plugins.json` chain collapses into a single file,
+because `Repository.extensions` holds the entries inline. `plugins.json` was
+removed from `releases/v1.3.0/` for that reason.
 
 ---
 
@@ -120,7 +135,7 @@
   ```
 - **Extensions screen** has Refresh and Remove buttons per repository row (via `Intent::RefreshRepository` and `Intent::RemoveRepository`)
 - **CTGMovies provider** already ported to Rust in `app-providers` crate (the only Android → Wasm port needed)
-- **All 84 tests pass**, 0 failed; clippy 0 warnings; `cargo fmt --all --check` clean
+- **All 80 tests pass**, 0 failed; clippy 0 warnings; `cargo fmt --all --check` clean
 - **`--probe builtin-ctgmovies`**: home 3 rows / 89 items, search 9 items, details resolve, 2 sources found, exit 0
 - **Release build**: PE subsystem 2 → no console window
 
@@ -146,5 +161,5 @@ Error handling:
 | 1 | Fetch and analyze `repo.json` | ✅ Done — format documented |
 | 2 | Create Android→Desktop Wasm mapping table | ✅ Done — all fields mapped |
 | 3 | Design desktop repo schema JSON | ✅ Done — `desktop-repo-schema.json` created |
-| 4 | Verify all plan verifications pass | ✅ Done — 84 tests, 0 clippy warnings, clean fmt, release build OK, --probe works |
+| 4 | Verify all plan verifications pass | ✅ Done — 80 tests, 0 clippy warnings, clean fmt, release build OK, --probe works |
 | 5 | Niloy repo analysis complete | ✅ Done — BDIX-internal DNS restriction documented |

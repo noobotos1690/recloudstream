@@ -1,0 +1,16 @@
+[package]
+name = "app-playback"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[features]
+# libmpv is loaded dynamically at runtime, so enabling this feature adds no
+# link-time dependency and the app still starts when the DLL is absent.
+default = ["mpv"]
+mpv = ["dep:libloading"]
+
+[dependencies]
+app-core = { workspace = true }
+libloading = { workspace = true, optional = true }
