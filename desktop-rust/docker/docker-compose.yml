@@ -1,0 +1,9 @@
+version: "3"
+services:
+  repo:
+    image: nginx:alpine
+    ports:
+      - "127.0.0.1:8080:80"
+    volumes:
+      - ./releases/v1.3.0:/usr/share/nginx/html/repo:ro
+    command: ["nginx", "-g", "daemon off;"]
